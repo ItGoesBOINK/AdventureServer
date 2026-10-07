@@ -66,9 +66,9 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
-.env.*
-!.env.example
+server/.env
+server/.env.example
+!server/.env.example
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -155,12 +155,15 @@ vite.config.ts.timestamp-*
 node_modules/
 
 # Environment / secrets
-.env
-.env.*
-!.env.example
+server/.env
+server/.env.example
+!server/.env.example
 
 # Build output
 dist/
 
 # Intelli-J
 .idea/
+
+# Composer
+/vendor/
