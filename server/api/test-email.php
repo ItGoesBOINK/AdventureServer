@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../mail.php';
+require_once __DIR__ . '/../mail.php';
 
 header('Content-Type: application/json');
 

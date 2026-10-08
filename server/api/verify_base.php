@@ -1,7 +1,7 @@
 <?php
 
-require __DIR__ . '/../db.php';
-require __DIR__ . '/../common/base.php';
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../common/base.php';
 
 function GetToken()
 {

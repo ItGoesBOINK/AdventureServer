@@ -1,7 +1,7 @@
 <?php
 
-require __DIR__ . '/../db.php';
-require __DIR__ . '/verify_base.php';
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/verify_base.php';
 
 ApplyHeader();
 CheckHasGetMethod();
