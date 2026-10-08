@@ -1,63 +1,59 @@
 <?php
 
-require __DIR__ . '/../db.php';
+require __DIR__ . '/register_base.php';
 
-function HandleError($code, $message)
-{
-    http_response_code($code);
-    echo json_encode(['error' => $message]);
-    exit;
-}
+ApplyHeader();
 
-header('Content-Type: application/json');
+CheckHasPostMethod();
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST')
-{ HandleError(405, 'POST Method Not Allowed!'); }
+$input = GetInput();
 
-$input = json_decode(file_get_contents('php://input'), true);
+CheckValidJSON($input);
 
-if (!is_array($input))
-{ HandleError(400, 'Invalid Input JSON!'); }
-
-$email = $input['email'] ?? '';
-$user = $input['username'] ?? '';
-$pass = $input['password'] ?? '';
-
-$email = trim($email);
-$mail = strtolower($email);
+$email = GetEmailInput($input);
+$user = GetUserNameInput($input);
+$pass = GetPasswordInput($input);
 
 $username = trim($username);
 
-$regexp = '/^[a-zA-Z0-9_.-]{7,63}$/';
-if (!preg_match($regexp, $user)) {
-    HandleError(400, 'User name must include only letters, numbers, underscores, hyphens, or dots, and must be from 7-64 characters long.');
-}
-
-$passMin = 8;
-if (strlen($pass) < $passMin) {
-    HandleError(400, 'Password must be at least ' . $passMin . ' characters long!');
-}
-
-if ($email === '' || $user === '' || $pass === ''){
-    HandleError(400, 'Email, User Name, and Password are required!');
-}
-
-if (!filter_var($email, FILTER_VALIDATE_EMAIL))
-{ HandleError(400, 'Invalid Email Address!'); }
+CheckForEmptyInput($email, $user, $pass);
+CheckEmail($email);
+CheckUserName($user);
+CheckPassword($pass);
 
 $hash = password_hash($pass, PASSWORD_DEFAULT);
+$verificationToken = bin2hex(random_bytes(32));
+$verificationTokenHash = hash('sha256', $verificationToken, true);
+$verificationExpiresAt = date('Y-m-d H:i:s', time() + (24 * 60 *60));
 
 
 try {
 
     $sql = $pdo->prepare(
-        'INSERT INTO users (email, username, password_hash) VALUES (:email, :username, :password_hash)'
+        'INSERT INTO users
+        (
+            email,
+            username,
+            password_hash,
+            verification_token_hash,
+            verification_expires_at
+        )
+        VALUES
+        (
+            :email,
+            :username,
+            :password_hash,
+            :verification_token_hash,
+            :verification_expires_at
+        )'
     );
 
     $sql->execute([
         'email' => $email,
         'username' => $user,
-        'password_hash' => $hash
+        'password_hash' => $hash,
+        'verification_token_hash' => $verificationTokenHash,
+        'verification_expires_at' => $verificationExpiresAt
     ]);
 
 } catch (PDOException $e) {
@@ -72,9 +68,91 @@ try {
     HandleError(500, 'Internal Server Error!');
 }
 
+/*
 echo json_encode([
     'message' => 'User Registered',
     'id' => $pdo->lastInsertId()
 ]);
+*/
+
+$verificationUrl = rtrim(getenv('APP_URL'), '/') . '/verify?token=' . urlencode($verificationToken);
+
+$text = <<<TEXT
+Hello $username,
+
+Thank you for registering for Adventure Server.
+
+Please verify your email address by visiting this link:
+
+$verificationUrl
+
+This link will expire in 24 hours.
+
+If you did not create this account, you can safely ignore this email.
+
+TEXT;
+
+$html = <<<HTML
+<h1>Welcome to Adventure Server!</h1>
+
+<p>Hello $username,</p>
+
+<p>
+    Thank you for registering for Adventure Server.
+</p>
+
+<p>
+    Please verify your email address by clicking the button below:
+</p>
+
+<p>
+    <a
+        href="$verificationUrl"
+        style="
+            display: inline-block;
+            padding: 12px 20px;
+            background: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        "
+    >
+        Verify Email Address
+    </a>
+</p>
+
+<p>
+    This link will expire in 24 hours.
+</p>
+
+<p>
+    If you did not create this account, you can safely ignore this email.
+</p>
+HTML;
+
+try {
+    sendEmail(
+        $email,
+        'Verify your Adventure Server account',
+        $text,
+        $html
+    );
+} catch (Throwable $exception) {
+
+    $msg = $exception->getMessage();
+
+    error_log($msg);
+
+    http_response_code(500);
+
+    echo json_encode([
+        'error' => 'Account created, but verification email could not be sent',
+        'message' => $msg
+    ]);
+
+    exit;
+}
+
+HandleSuccess('Account created. Please check your email to verify your account.');
 
 ?>
