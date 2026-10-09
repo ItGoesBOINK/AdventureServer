@@ -44,17 +44,19 @@ function CheckValidJSON($json)
 
 function CheckUserName($name)
 {
-    $regexp = '/^[a-zA-Z0-9_.-]{7,63}$/';
+    $regexp = '/^[a-zA-Z0-9_.-]{8,64}$/';
     if (!preg_match($regexp, $name)) {
-        HandleError(400, 'User name must include only letters, numbers, underscores, hyphens, or dots, and must be from 7-64 characters long.');
+        HandleError(400, 'User name must include only letters, numbers, underscores, hyphens, or dots, and must be from 8-64 characters long.');
     }
 }
 
 function CheckPassword($password)
 {
     $passMin = 8;
-    if (strlen($password) < $passMin) {
-        HandleError(400, 'Password must be at least ' . $passMin . ' characters long!');
+    $passMax = 128;
+    $l = strlen($password);
+    if ($l < $passMin || $l > $passMax) {
+        HandleError(400, 'Password must be between ' . $passMin . ' and ' . $passMax . ' characters long!');
     }
 }
 

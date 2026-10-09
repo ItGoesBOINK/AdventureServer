@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/register_base.php';
 
+ConfigureCORS();
 ApplyHeader();
 
 CheckHasPostMethod();

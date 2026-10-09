@@ -1,7 +1,7 @@
 <?php
 
 //require_once __DIR__ . '/server/.env';
-$envFile = __DIR__ . '/.env';
+$envFile = __DIR__ . '/../.env';
 
 if (!file_exists($envFile))
 {

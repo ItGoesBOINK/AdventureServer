@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../common/base.php';
+require_once __DIR__ . '/../cors.php';
 
 function GetToken()
 {
@@ -33,7 +34,7 @@ function GetUserFromTokenQuery($o)
 function CheckUser($u)
 {
     if (!$u) {
-        HandleError(400, 'No User Data Found for the provided Token!');
+        HandleError(400, 'The verification token you provided is either invalid, or has already been used!');
     }
 }
 
